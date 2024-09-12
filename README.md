@@ -28,7 +28,7 @@ For the GitHub PAT (Personal Access Token), navigate into the settings and then 
 
 #### Repository variables
 
--none-
+To manage the versioning, we will use the `VERSION` variable. This variable will be used to tag the docker image and the GitHub release. We have to increment this variable every time the production deployment ran successfully.
 
 ### Environments
 

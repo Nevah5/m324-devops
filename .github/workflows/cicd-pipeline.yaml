@@ -5,6 +5,11 @@ on:
     branches:
       - main
       - develop
+    paths-ignore:
+      - .github/**
+      - images/**
+      - README.md
+      - .gitignore
 
 jobs:
   build-and-push:
@@ -33,6 +38,23 @@ jobs:
         run: |
           docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
           docker push ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
+  deploy:
+    runs-on: self-hosted
+    needs: build-and-push
+    environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
+    steps:
+      - name: 📦 Checkout repository
+        uses: actions/checkout@v4
+      - name: 📐 Setup AWS CLI
+        uses: ./.github/actions/setup-ecr
+        with:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
+          AWS_ECR_REGISTRY: ${{ vars.AWS_ECR_REGISTRY }}
+      - name:
+        run: |
+          aws ecs update-service --cluster $CD_AWS_ECS_CLUSTER --service $CD_AWS_ECS_SERVICE --force-new-deployment
   create-release:
     name: Create GitHub Release
     if: ${{ github.ref_name == 'main' }}
