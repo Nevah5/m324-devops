@@ -18,13 +18,13 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: 🔒 Set AWS credentials
-      shell: bash
-      run: |
-        export AWS_ACCESS_KEY_ID=${{ inputs.AWS_ACCESS_KEY_ID }}
-        export AWS_SECRET_ACCESS_KEY=${{ inputs.AWS_SECRET_ACCESS_KEY }}
-        export AWS_SESSION_TOKEN=${{ inputs.AWS_SESSION_TOKEN }}
     - name: 🚪 Docker login
       shell: bash
       run: |
+        echo "🔒 Setting AWS credentials"
+        export AWS_ACCESS_KEY_ID=${{ inputs.AWS_ACCESS_KEY_ID }}
+        export AWS_SECRET_ACCESS_KEY=${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        export AWS_SESSION_TOKEN=${{ inputs.AWS_SESSION_TOKEN }}
+
+        echo "🔑 Running docker login"
         aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ inputs.AWS_ECR_REGISTRY }}
