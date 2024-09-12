@@ -68,8 +68,90 @@ Under "Settings > Actions > Runners" you can find the link to "[Learn more about
 
 In my case I will be setting up a runner on repository level.
 
-> [!NOTE]
-> TODO
+To start, I went to `Settings > Actions > Runners` and clicked on `New self-hosted runner`.
+
+Then I setup a new EC2 instance on AWS and logged in.
+
+```sh
+ssh -i m324-key.pem ec2-user@<ip>
+```
+
+Then I started the installation process.
+
+```sh
+# Create a folder
+$ mkdir actions-runner && cd actions-runner
+# Download the latest runner package
+$ curl -o actions-runner-linux-x64-2.319.1.tar.gz -L https://github.com/actions/runner/releases/download/v2.319.1/actions-runner-linux-x64-2.319.1.tar.gz
+# Optional: Validate the hash
+$ echo "3f6efb7488a183e291fc2c62876e14c9ee732864173734facc85a1bfb1744464  actions-runner-linux-x64-2.319.1.tar.gz" | shasum -a 256 -c
+# Extract the installer
+$ tar xzf ./actions-runner-linux-x64-2.319.1.tar.gz
+```
+
+So far so good.
+
+```sh
+# Create the runner and start the configuration experience
+$ ./config.sh --url https://github.com/Nevah5/m324-devops --token ASNJAFY6N3D4CFLO6GLUSTTG4LWPQ
+```
+
+Then after running this command, I got the following error:
+
+```log
+Libicu's dependencies is missing for Dotnet Core 6.0
+Execute sudo ./bin/installdependencies.sh to install any missing Dotnet Core 6.0 dependencies.
+```
+
+So I ran `./bin/installdependencies.sh` and got another error:
+
+```log
+[ec2-user@ip-172-31-23-23 actions-runner]$ sudo ./bin/installdependencies.sh
+--------OS Information--------
+NAME="Amazon Linux"
+VERSION="2023"
+ID="amzn"
+ID_LIKE="fedora"
+VERSION_ID="2023"
+PLATFORM_ID="platform:al2023"
+PRETTY_NAME="Amazon Linux 2023.5.20240903"
+ANSI_COLOR="0;33"
+CPE_NAME="cpe:2.3:o:amazon:amazon_linux:2023"
+HOME_URL="https://aws.amazon.com/linux/amazon-linux-2023/"
+DOCUMENTATION_URL="https://docs.aws.amazon.com/linux/"
+SUPPORT_URL="https://aws.amazon.com/premiumsupport/"
+BUG_REPORT_URL="https://github.com/amazonlinux/amazon-linux-2023"
+VENDOR_NAME="AWS"
+VENDOR_URL="https://aws.amazon.com/"
+SUPPORT_END="2028-03-15"
+------------------------------
+"fedora"
+Can't detect current OS type based on /etc/os-release.
+Can't install dotnet core dependencies.
+You can manually install all required dependencies based on following documentation
+https://docs.microsoft.com/en-us/dotnet/core/linux-prerequisites?tabs=netcore2x
+```
+
+After inspecting the installation script, I extracted and ran those commands:
+
+```sh
+sudo yum install -y openssl krb5-libs zlib
+sudo dnf install -y lttng-ust openssl-libs krb5-libs zlib libicu
+```
+
+Then the `./config.sh` script worked and I was able to register the runner.
+
+Finally only `./run.sh` left. And to run it in the background: `./run.sh &`.
+
+![GitHub Runner](./images/github-runners.png)
+
+To use the runner in a workflow, I can add the following:
+
+```yaml
+jobs:
+  example:
+    runs-on: self-hosted
+```
 
 ## The pipeline
 
@@ -77,8 +159,18 @@ In my case I will be setting up a runner on repository level.
 
 A GitHub Action Action is a reusable step that can be used in a workflow. There are many actions available in the GitHub Marketplace. In my case I created my own to setup the AWS CLI.
 
-#### `setup-aws` Action
+#### `setup-ecr` action
 
 Because the runner is a self-hosted runner, I can install the AWS CLI tool per default. This is also the case with many other [tools on the public runners](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2004-Readme.md).
 
 So in my case, I only need to run the `aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $AWS_ECR_REGISTRY` command.
+
+### Workflows
+
+GitHub workflows are defined in a `.github/workflows` folder. Every workflow is defined in an own `.yml` file. It contains jobs, that have steps. Each step can run multiple commands or trigger an action.
+
+#### CI/CD workflow
+
+In my case I created a `cicd-pipeline.yml`, where I added a basic pipeline that runs on the `develop` and `main` branch.
+
+![CI/CD Workflow](./images/cicd-workflow.png)
