@@ -37,12 +37,12 @@ jobs:
     name: Create GitHub Release
     if: ${{ github.ref_name == 'main' }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     needs: build-and-push
     steps:
       - name: 📦 Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GH_PAT }}
       - name:
         run: |
           git config --global user.name "CI/CD Pipeline"

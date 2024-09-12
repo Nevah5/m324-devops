@@ -8,6 +8,8 @@ The Architecture Ref Card 03 application is from M347. It loads jokes from a dat
 
 ### Variables
 
+#### Repository secrets
+
 To use the AWS CLI, you will need to have the tokens for AWS stored as a secret.
 
 - `AWS_ACCESS_KEY_ID`
@@ -23,6 +25,10 @@ You can find the AWS credentials in the learner lab here:
 > The credentials will change every time you start the lab. So you will need to update the credentials in the GitHub secrets.
 
 For the GitHub PAT (Personal Access Token), navigate into the settings and then create a new fine-grained token. Select the Repository and under `Repository permissions` set the `Contents` set it to `read and write`. After creating, copy the token and paste it into the created secret.
+
+#### Repository variables
+
+-none-
 
 ### Environments
 
