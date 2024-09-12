@@ -13,13 +13,16 @@ To use the AWS CLI, you will need to have the tokens for AWS stored as a secret.
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 - `AWS_SESSION_TOKEN`
+- `GH_PAT` (used to push a tag)
 
-You can find those credentials in the learner lab here:
+You can find the AWS credentials in the learner lab here:
 
 ![AWS Credentials](./images/aws-credentials.png)
 
 > [!IMPORTANT]
 > The credentials will change every time you start the lab. So you will need to update the credentials in the GitHub secrets.
+
+For the GitHub PAT (Personal Access Token), navigate into the settings and then create a new fine-grained token. Select the Repository and under `Repository permissions` set the `Contents` set it to `read and write`. After creating, copy the token and paste it into the created secret.
 
 ### Environments
 
