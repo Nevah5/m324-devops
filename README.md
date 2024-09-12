@@ -27,12 +27,16 @@ Environments allow you to have environment specific variables for a job. You can
 
 ![GitHub Environments](./images/github-environments.png)
 
-In all environments you want to deploy to, you will need to add the following variables:
+Because we are building a docker image, we want to store that in a repository. We could do that with GitHub (ghcr.io - GitHub Container Registry) or because we are deploying the application within AWS, with ECR (Elastic Container Registry). I created two ECRs. One for the development environment with mutable tags, so tags can be overwritten (snapshot registry). And another one for the production environment, where it is critical to not overwrite older versions to allow a rollback in an emergency (release registry). You can find the needed variables here:
 
-- `AWS_ECR_REGISTRY`
+![AWS ECR Variables](./images/aws-ecr-variables.png)
+
+- `AWS_ECR_REGISTRY` (url)
 - `AWS_ECR_REPOSITORY_NAME`
 
 ![GitHub Environment Variables](./images/github-environment-production.png)
+
+It is also a good practice to define a deployment protection. As you can see in the screenshot under "Deployment branches and tags", I restricted the production environment to run on the `main` branch only.
 
 In my case I setup the variables for the prod and devt environment like following:
 
@@ -41,7 +45,7 @@ In my case I setup the variables for the prod and devt environment like followin
 | `AWS_ECR_REGISTRY`        | 676446025019.dkr.ecr.us-east-1.amazonaws.com | 676446025019.dkr.ecr.us-east-1.amazonaws.com |
 | `AWS_ECR_REPOSITORY_NAME` | m324-devops-release                          | m324-devops-snapshot                         |
 
-In my case I don't need a secret, because the secrets are defined in AWS for each environment.
+I haven't set any secrets, because we will define them in AWS for each environment that we deploy to.
 
 ### Branch protection
 
