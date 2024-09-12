@@ -41,9 +41,13 @@ jobs:
     steps:
       - name: 📦 Checkout repository
         uses: actions/checkout@v4
+      - name:
+        run: |
+          git config --global user.name "CI/CD Pipeline"
+          git config --global user.email "contact@nevah5.dev"
       - name: 🏷️ Create tag
         run: |
-          git tag ${{ vars.VERSION }}
+          git tag -a ${{ vars.VERSION }} -m "Version ${{ vars.VERSION }}"
           git push --tags
       - uses: ncipollo/release-action@v1
         with:
