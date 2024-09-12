@@ -1,53 +1,71 @@
-# Architecture Ref. Card 03
+# M324 DevOps - Architecture Ref Card 03
 
-## Über dieses Projekt
+## About this project
 
-Dieses Projekt ist ein Spring-boot projekt mit einer angehängten MariaDB Datenbank. Im Frontend sieht man Witze, die von der Datenbank abgefragt werden.
+The Architecture Ref Card 03 application is from M347. It loads jokes from a database and displays it on an HTML page with Thymeleaf. The application is using the spring boot framework with different layers like controller, service, repository, and model. The application is using the H2 database to store the jokes. The application is using the spring boot framework with different layers like controller, service, repository, and model. The application is using the H2 database to store the jokes.
 
-## Lokale Inbetriebnahme
+## Setting up the Repository
 
-Um das Projekt lokal laufen zu lassen, braucht man [Docker](https://www.docker.com/products/docker-desktop/).
+### Variables
 
-1. Projekt clonen
-2. `.env.example` kopieren und zu `.env` umbenennen
-3. Terminal im Porjektordner öffnen
-4. Befehl eingeben: `docker compose -f docker-compose.yml up -d`
-5. [http://localhost:8080/](http://localhost:8080/) öffnen
+To use the AWS CLI, you will need to have the tokens for AWS stored as a secret.
 
-## Inbetriebnahme mit CI/CD Pipeline
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_SESSION_TOKEN`
 
-Um die Pipeline ausführen zu können, braucht man einen Runner. Wie man einen Runner selbst hosted, findet man [hier](https://docs.gitlab.com/runner/).
+You can find those credentials in the learner lab here:
 
-### Umgebungsvariablen
+![AWS Credentials](./images/aws-credentials.png)
 
-Dieses Projekt hat zusätzlich eine Pipeline, welche diverse Umgebungsvariablen benötigt. Diese sind hier aufgelistet.
+> [!IMPORTANT]
+> The credentials will change every time you start the lab. So you will need to update the credentials in the GitHub secrets.
 
-| Variable                   | Beschreibung                                                                                                                                                                       | Beispiel                                                                                                                                                                                                                                                                                                                                                                                                 |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| AWS_ACCESS_KEY_ID          | Access Key Id der AWS Learner Lab Konsole.                                                                                                                                         | ASIAQTI7H2756XUIPE56                                                                                                                                                                                                                                                                                                                                                                                     |
-| AWS_DEFAULT_REGION         | Learner Lab Konsole Region.                                                                                                                                                        | us-east-1                                                                                                                                                                                                                                                                                                                                                                                                |
-| AWS_SECRET_ACCESS_KEY      | Secret Access Key von der AWS Learner Lab Konsole.                                                                                                                                 | +0RaejpFCuRCeN3Ek8+nx+Ul0rmdwYtdjC/G5yT1                                                                                                                                                                                                                                                                                                                                                                 |
-| AWS_SESSION_TOKEN          | Der AWS Session token der Learner Lab Konsole.                                                                                                                                     | FwoGZXIvYXdzEJP//////////wEaDLaLGBNaL/HA/940mSLMAaA+99g7Kb0XBjQ1fPrCgWrMlOwXJMNTz3elOVT4stWuhJBwk/GgUnObNeNiZGDKIxOfRjbm3llupFzhwbTMvuq8Y0L6fntOGCz4IRncntQSWuDmo0tHc4+eKwArb3aG3yGS4uHJD#gs4gysgdfgX9jQB7EXrmXppNMT/sLzXF1JQoz8rQeRHYUOzfxXUQTFDsBWPoEixSdg7Jzk3eRQhv3gABPTCm4+76OZ1mxXXjtAXBuJTLfqVv9A1UsVMLevkr4mtYY9Uyt0dVn/ISiOweGjBjIt3Ei2gNWKuvo6XW2o8M5QNJaWfbo6D8P6Qy2a60sDJQwGvrBOd/vhmKb6H6f9 |
-| CI_AWS_ECR_REPOSITORY_NAME | Der Name des Repositories, um das Image korrekt zu bauen. Diese Variabel wird benötigt, das GitLab keine Möglichkeit bereitstellt, dies mit den vorgegebenen Variabeln abzufragen. | refcard_03                                                                                                                                                                                                                                                                                                                                                                                               |
-| CI_AWS_ECR_REGISTRY        | Das Registry, um das Image zu pushen.                                                                                                                                              | 111111111111.dkr.ecr.us-east-1.amazonaws.com                                                                                                                                                                                                                                                                                                                                                             |
-| CD_AWS_ECS_SERVICE         | Der AWS Service Name, um das Deployment zu automatisieren.                                                                                                                         | refcard03_service                                                                                                                                                                                                                                                                                                                                                                                        |
-| CD_AWS_ECS_CLUSTER         | Der AWS Cluster Name um das Deployment zu automatisieren.                                                                                                                          | refcard03_cluster                                                                                                                                                                                                                                                                                                                                                                                        |
+### Environments
 
+Environments allow you to have environment specific variables for a job. You can define the environments in the GitHub repository settings under "Environments".
 
-### Benötigte AWS Services
+![GitHub Environments](./images/github-environments.png)
 
-Wichtig ist, dass man auf AWS die folgenden Dinge aufgesetzt hat:
+In all environments you want to deploy to, you will need to add the following variables:
 
-- ECR (Registry)
-- ECS (Cluster + Service)
-- RDS (MariaDB)
+- `AWS_ECR_REGISTRY`
+- `AWS_ECR_REPOSITORY_NAME`
 
-### Konfiguraiton AWS
+![GitHub Environment Variables](./images/github-environment-production.png)
 
-In der Task definition muss man noch die folgenden Environment Variables definieren.
+In my case I setup the variables for the prod and devt environment like following:
 
-| Variable    | Default (Falls nicht gesetzt)       |
-| ----------- | ----------------------------------- |
-| DB_URL      | jdbc:mariadb://database:3306/jokedb |
-| DB_USERNAME | jokedbuser                          |
-| DB_PASSWORD | 123456                              |
+| Variable                  | `production`                                 | `development`                                |
+| ------------------------- | -------------------------------------------- | -------------------------------------------- |
+| `AWS_ECR_REGISTRY`        | 676446025019.dkr.ecr.us-east-1.amazonaws.com | 676446025019.dkr.ecr.us-east-1.amazonaws.com |
+| `AWS_ECR_REPOSITORY_NAME` | m324-devops-release                          | m324-devops-snapshot                         |
+
+In my case I don't need a secret, because the secrets are defined in AWS for each environment.
+
+### Branch protection
+
+Setting up a branch protection, so that you need a pull request for the default branch and cannot delete the develop branch is a good practice.
+
+![Branch Protection](./images/github-branchprotection.png)
+
+## Setting up a GitHub runner
+
+Under "Settings > Actions > Runners" you can find the link to "[Learn more about self-hosted runners](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners)".
+
+In my case I will be setting up a runner on repository level.
+
+> [!NOTE]
+> TODO
+
+## The pipeline
+
+### Actions
+
+A GitHub Action Action is a reusable step that can be used in a workflow. There are many actions available in the GitHub Marketplace. In my case I created my own to setup the AWS CLI.
+
+#### `setup-aws` Action
+
+Because the runner is a self-hosted runner, I can install the AWS CLI tool per default. This is also the case with many other [tools on the public runners](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2004-Readme.md).
+
+So in my case, I only need to run the `aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin $AWS_ECR_REGISTRY` command.
