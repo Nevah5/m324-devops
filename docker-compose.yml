@@ -1,0 +1,36 @@
+version: '3'
+
+services:
+  database:
+    image: mariadb:10.9.2
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./.docker/db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MARIADB_DATABASE: jokedb
+      MARIADB_USER: jokedbuser
+      MARIADB_PASSWORD: 123456
+
+  phpmyadmin:
+    depends_on:
+      - database
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8090:80"
+    environment:
+      PMA_HOST: database
+
+  app:
+    depends_on:
+      - database
+    restart: always
+    build:
+      context: .
+      dockerfile: .Dockerfile
+    image: noahgeeler-refcard03
+    ports:
+      - "8080:8080"
+    env_file: .env

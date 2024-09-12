@@ -1,0 +1,16 @@
+# Maven
+target/
+.mvn/
+
+# Docker
+.docker
+
+# IDE
+.idea/
+.vscode/
+
+# Diverses
+.env*
+!.env.example
+*.tmp
+*.log

@@ -1,0 +1,9 @@
+# Project
+.gitignore
+.env.example
+.env*
+README.md
+
+# IDE
+.idea
+.vsc
