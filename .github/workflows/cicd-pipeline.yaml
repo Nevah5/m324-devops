@@ -24,15 +24,15 @@ jobs:
       - name: 🚧 Build docker image
         run: |
           docker build -t ${{ vars.AWS_ECR_REPOSITORY_NAME }} .
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REPOSITORY_NAME }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}
       - name: 🎯 Push docker image
         run: |
-          docker push ${{ vars.AWS_ECR_REPOSITORY_NAME }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}
+          docker push ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}
       - name: 🕔 Push latest tag
         if: ${{ github.ref_name == 'develop' }}
         run: |
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REPOSITORY_NAME }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
-          docker push ${{ vars.AWS_ECR_REPOSITORY_NAME }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
+          docker push ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
   create-release:
     name: Create GitHub Release
     if: ${{ github.ref_name == 'main' }}
