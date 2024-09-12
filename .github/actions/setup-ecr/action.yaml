@@ -1,0 +1,24 @@
+name: Setup AWS ECR
+description: This action sets up the Amazon Elastic Container Registry (ECR) for use in a GitHub Actions workflow.
+
+inputs:
+  AWS_ACCESS_KEY:
+    required: true
+    description: The access key for the AWS CLI.
+  AWS_SECRET_ACCESS_KEY:
+    required: true
+    description: The access key secret for the AWS CLI.
+  AWS_SESSION_TOKEN:
+    required: true
+    description: The session token for the AWS CLI.
+  AWS_ECR_REGISTRY:
+    required: true
+    description: The ECR url for the docker login.
+
+runs:
+  using: composite
+  steps:
+    - name: 🚪 Docker login
+      shell: bash
+      run: |
+        aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ inputs.AWS_ECR_REGISTRY }}
