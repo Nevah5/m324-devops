@@ -15,7 +15,7 @@ jobs:
     name: 🔨 Build and push
     runs-on: self-hosted
     permissions:
-      contents: write
+      packages: write
     environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     steps:
       - name: 📦 Checkout repository
@@ -48,7 +48,7 @@ jobs:
           echo "🧩 Preparing image name"
           GITHUB_REPOSITORY=${{ github.repository }}
           GHCR_REPO=ghcr.io/${GITHUB_REPOSITORY@L}
-          echo "Repository: $GHCR_REPO"
+          echo "Registry: $GHCR_REPO"
 
           echo "🚀 Pushing to ghcr.io"
           docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} $GHCR_REPO:latest
