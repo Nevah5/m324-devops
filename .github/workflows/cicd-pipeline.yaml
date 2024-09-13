@@ -40,7 +40,7 @@ jobs:
           docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
           docker push ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
       - name: 🐙 Push to GHCR
-        # if: ${{ github.ref_name == 'main' }}
+        if: ${{ github.ref_name == 'main' }}
         run: |
           echo "🔑 Logging into ghcr.io"
           docker login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.GITHUB_TOKEN }}
