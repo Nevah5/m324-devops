@@ -273,10 +273,12 @@ GitHub workflows are defined in a `.github/workflows` folder. Every workflow is 
 
 In my case I created a `cicd-pipeline.yml`, where I added a basic pipeline that runs on the `develop` and `main` branch.
 
-> [!IMPORTANT]
-> TODO: Add link to pipeline
+You can checkout the pipeline in [./.github/workflows/cicd-pipeline.yaml](./.github/workflows/cicd-pipeline.yaml).
 
 ## Public runner pricing
 
-> [!IMPORTANT]
-> TODO: Pricing
+[The wiki](https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions) states, that you get 2'000 free minutes of GitHub Actions per month. If you upgrade to Pro, you can use Actions in private repositories as well and get 3'000 minutes.
+
+If you need more runtime, you can buy additional minutes. It's not very expensive, for a linux 2-core runner, it's `$0.008` USD per minute.
+
+Because I wanted to have an additional challenge, I setup a private runner in my case. If you do that, you are not restricted in minutes in any way. But the cost of running a private runner might be higher than the cost of using the free minutes or buying additional minutes.
