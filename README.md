@@ -1,5 +1,27 @@
 # M324 DevOps - Architecture Ref Card 03
 
+- [M324 DevOps - Architecture Ref Card 03](#m324-devops---architecture-ref-card-03)
+  - [About this project](#about-this-project)
+  - [Setting up the Repository](#setting-up-the-repository)
+    - [Variables](#variables)
+      - [Repository secrets](#repository-secrets)
+      - [Repository variables](#repository-variables)
+    - [Environments](#environments)
+    - [Branch protection](#branch-protection)
+  - [Setting up a GitHub runner](#setting-up-a-github-runner)
+    - [Creating a systemd service](#creating-a-systemd-service)
+  - [Deploying the application on AWS](#deploying-the-application-on-aws)
+    - [Creating a relational database with RDS](#creating-a-relational-database-with-rds)
+    - [Creating an ECS cluster](#creating-an-ecs-cluster)
+    - [Creating an ECS task definition](#creating-an-ecs-task-definition)
+    - [Creating an ECS service](#creating-an-ecs-service)
+  - [The pipeline](#the-pipeline)
+    - [Actions](#actions)
+      - [Setup ECR Action](#setup-ecr-action)
+    - [Workflows](#workflows)
+      - [CI/CD workflow](#cicd-workflow)
+  - [Public runner pricing](#public-runner-pricing)
+
 ## About this project
 
 The Architecture Ref Card 03 application is from M347. It loads jokes from a database and displays it on an HTML page with Thymeleaf. The application is using the spring boot framework with different layers like controller, service, repository, and model. The application is using the H2 database to store the jokes. The application is using the spring boot framework with different layers like controller, service, repository, and model. The application is using the H2 database to store the jokes.
@@ -27,6 +49,8 @@ You can find the AWS credentials in the learner lab here:
 
 To manage the versioning, we will use the `VERSION` variable. This variable will be used to tag the docker image and the GitHub release. We have to increment this variable every time the production deployment ran successfully.
 
+I also added `DEPLOY_TO_AWS` for the pipeline, so that I can shut down and delete the ECS and RDS on AWS to save costs. If this variable is set to `false`, the pipeline will not push the docker image to the ECR and will not deploy the image to the ECS. But it will still build the image and push to the GitHub Container Registry if it is running on the `main` branch.
+
 ### Environments
 
 Environments allow you to have environment specific variables for a job. You can define the environments in the GitHub repository settings under "Environments".
@@ -37,19 +61,26 @@ Because we are building a docker image, we have to store that somewhere. You gen
 
 ![AWS ECR Variables](./images/aws-ecr-variables.png)
 
-- `AWS_ECR_REGISTRY` (url)
-- `AWS_ECR_REPOSITORY_NAME`
-
 ![GitHub Environment Variables](./images/github-environment-production.png)
 
 It is also a good practice to define a deployment protection. As you can see in the screenshot under "Deployment branches and tags", I restricted the production environment to run on the `main` branch only.
 
-In my case I setup the variables for the prod and devt environment like following:
+In my case I setup the variables for the `production` and `development` environment like following:
 
-| Variable                  | `production`                                 | `development`                                |
-| ------------------------- | -------------------------------------------- | -------------------------------------------- |
-| `AWS_ECR_REGISTRY`        | 676446025019.dkr.ecr.us-east-1.amazonaws.com | 676446025019.dkr.ecr.us-east-1.amazonaws.com |
-| `AWS_ECR_REPOSITORY_NAME` | m324-devops-release                          | m324-devops-snapshot                         |
+| Variable                   | `production`                                                                          | `development`                                |
+| -------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `AWS_ECR_REGISTRY`         | 676446025019.dkr.ecr.us-east-1.amazonaws.com                                          | 676446025019.dkr.ecr.us-east-1.amazonaws.com |
+| `AWS_ECR_REPOSITORY_NAME`  | m324-devops-release                                                                   | m324-devops-snapshot                         |
+| `AWS_ECS_CLUSTER`          | m324-devops-cluster                                                                   | m324-devops-cluster                          |
+| `AWS_ECS_SERVICE`          | m324-refcard-prod                                                                     | m324-refcard-devt                            |
+| `AWS_TASK_DEFINITION_NAME` | m324-refcard03-prod                                                                   | m324-refcard03-devt                          |
+| `DB_URL`                   | jdbc:mariadb://m324-refcard03-db.cpaysuk8s81l.us-east-1.rds.amazonaws.com:3306/jokedb | <-   (the same)                              |
+| `DB_USERNAME`              | jokedbuser                                                                            | jokedbuser                                   |
+
+
+Then also for only the production environment the following `Environment Secret`:
+
+- `DB_PASSWORD`
 
 I haven't set any secrets, because we will define them in AWS for each environment that we deploy to.
 
@@ -182,8 +213,45 @@ sudo systemctl status actions-runner.service
 
 ## Deploying the application on AWS
 
-> [!IMPORTANT]
-> TODO
+### Creating a relational database with RDS
+
+![RDS Creation](./images/aws-rds-creation.png)
+
+After creating, you can find the url of the database here:
+
+![RDS Endpoint](./images/aws-rds-url.png)
+
+Store this endpoint like this in the GitHub environment variable `DB_URL`:
+
+```txt
+jdbc:mariadb://<RDS_ENDPOINT_URL>/jokedb
+```
+
+### Creating an ECS cluster
+
+![ECS Cluster](./images/aws-ecs-cluster-creation.png)
+
+After creation, you should be able to find the cluster in the list.
+
+### Creating an ECS task definition
+
+![ECS Task Definition](./images/aws-ecs-taskdefinition-creation.png)
+
+For the environment variables, put in the details you already know. For the production environment, there is a JSON file for the task definition, located [here](./.github/aws/task-definition-prod.json). The pipeline will overwrite wrongly configured settings. Make sure tough, that the development task definition is correct.
+
+### Creating an ECS service
+
+After creating the task definition, you can create a service for the task.
+
+![ECS Service](./images/aws-ecs-service-creation.png)
+
+As soon as the service is running, you can do the following to make sure that the application is now working correctly.
+
+![ECS Service IP Address](./images/aws-ecs-task-ip-address.png)
+
+For me this was the case.
+
+![ECS Service Running](./images/aws-deployment-working-devt.png)
 
 ## The pipeline
 
@@ -191,7 +259,7 @@ sudo systemctl status actions-runner.service
 
 A GitHub Action Action is a reusable step that can be used in a workflow. There are many actions available in the GitHub Marketplace. In my case I created my own to setup the AWS CLI.
 
-#### `setup-ecr` action
+#### Setup ECR Action
 
 Because the runner is a self-hosted runner, I can install the AWS CLI tool per default. This is also the case with many other [tools on the public runners](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2004-Readme.md).
 
@@ -205,6 +273,12 @@ GitHub workflows are defined in a `.github/workflows` folder. Every workflow is 
 
 In my case I created a `cicd-pipeline.yml`, where I added a basic pipeline that runs on the `develop` and `main` branch.
 
-![CI/CD Workflow](./images/cicd-workflow.png)
+You can checkout the pipeline in [./.github/workflows/cicd-pipeline.yaml](./.github/workflows/cicd-pipeline.yaml).
 
 ## Public runner pricing
+
+[The wiki](https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions) states, that you get 2'000 free minutes of GitHub Actions per month. If you upgrade to Pro, you can use Actions in private repositories as well and get 3'000 minutes.
+
+If you need more runtime, you can buy additional minutes. It's not very expensive, for a linux 2-core runner, it's `$0.008` USD per minute.
+
+Because I wanted to have an additional challenge, I setup a private runner in my case. If you do that, you are not restricted in minutes in any way. But the cost of running a private runner might be higher than the cost of using the free minutes or buying additional minutes.
