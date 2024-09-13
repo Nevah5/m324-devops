@@ -66,10 +66,14 @@ jobs:
       - name: 🔁 Update task definition
         if: ${{ github.ref_name == 'main' }}
         run: |
+          echo "🔧 Replacing template values in json"
           sed -i 's/<IMAGE_URI>/${{ vars.AWS_ECR_REGISTRY }}\/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}/g' ./.github/aws/task-definition-prod.json
           sed -i 's/<DB_USERNAME>/${{ vars.DB_USERNAME }}/g' ./.github/aws/task-definition-prod.json
           sed -i 's|<DB_URL>|${{ vars.DB_URL }}|g' ./.github/aws/task-definition-prod.json
           sed -i 's/<DB_PASSWORD>/${{ secrets.DB_PASSWORD }}/g' ./.github/aws/task-definition-prod.json
+
+          echo "📄 Task definition content"
+          cat ./.github/aws/task-definition-prod.json
       - name: 🚀 Deploy to ECS
         run: |
           echo "🔒 Setting AWS credentials"
@@ -83,7 +87,7 @@ jobs:
           fi
 
           echo "🚀 Deploying to ECS"
-          aws ecs update-service --cluster ${{ vars.AWS_ECS_CLUSTER }} --service ${{ vars.AWS_ECS_SERVICE }} --force-new-deployment
+          aws ecs update-service --cluster ${{ vars.AWS_ECS_CLUSTER }} --service ${{ vars.AWS_ECS_SERVICE }}  --task-definition ${{ vars.AWS_TASK_DEFINITION_NAME }} --force-new-deployment
   create-release:
     name: 🐙 Create GitHub Release
     if: ${{ github.ref_name == 'main' }}
