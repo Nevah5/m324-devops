@@ -45,11 +45,15 @@ jobs:
           echo "🔑 Logging into ghcr.io"
           docker login ghcr.io -u ${{ github.repository_owner }} -p ${{ secrets.GITHUB_TOKEN }}
 
+          echo "🧩 Preparing image name"
+          GITHUB_REPOSITORY=${{ github.repository }}
+          echo "GHCR_REPO=${GITHUB_REPOSITORY@L}" >> "${GITHUB_ENV}"
+
           echo "🚀 Pushing to ghcr.io"
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ghcr.io/${{ github.repository }}:latest
-          docker push ghcr.io/${{ github.repository }}:latest
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ghcr.io/${{ github.repository }}:${{ vars.VERSION }}
-          docker push ghcr.io/${{ github.repository }}:${{ vars.VERSION }}
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ env.GHCR_REPO }}:latest
+          docker push ${{ env.GHCR_REPO }}:latest
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ env.GHCR_REPO }}:${{ vars.VERSION }}
+          docker push ${{ env.GHCR_REPO }}:${{ vars.VERSION }}
   deploy:
     runs-on: self-hosted
     if: false
