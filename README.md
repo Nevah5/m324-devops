@@ -1,7 +1,26 @@
 # M324 DevOps - Architecture Ref Card 03
 
-> [!IMPORTANT]
-> TODO: TOC
+- [M324 DevOps - Architecture Ref Card 03](#m324-devops---architecture-ref-card-03)
+  - [About this project](#about-this-project)
+  - [Setting up the Repository](#setting-up-the-repository)
+    - [Variables](#variables)
+      - [Repository secrets](#repository-secrets)
+      - [Repository variables](#repository-variables)
+    - [Environments](#environments)
+    - [Branch protection](#branch-protection)
+  - [Setting up a GitHub runner](#setting-up-a-github-runner)
+    - [Creating a systemd service](#creating-a-systemd-service)
+  - [Deploying the application on AWS](#deploying-the-application-on-aws)
+    - [Creating a relational database with RDS](#creating-a-relational-database-with-rds)
+    - [Creating an ECS cluster](#creating-an-ecs-cluster)
+    - [Creating an ECS task definition](#creating-an-ecs-task-definition)
+    - [Creating an ECS service](#creating-an-ecs-service)
+  - [The pipeline](#the-pipeline)
+    - [Actions](#actions)
+      - [Setup ECR Action](#setup-ecr-action)
+    - [Workflows](#workflows)
+      - [CI/CD workflow](#cicd-workflow)
+  - [Public runner pricing](#public-runner-pricing)
 
 ## About this project
 
@@ -194,8 +213,45 @@ sudo systemctl status actions-runner.service
 
 ## Deploying the application on AWS
 
-> [!IMPORTANT]
-> TODO: Deployment
+### Creating a relational database with RDS
+
+![RDS Creation](./images/aws-rds-creation.png)
+
+After creating, you can find the url of the database here:
+
+![RDS Endpoint](./images/aws-rds-url.png)
+
+Store this endpoint like this in the GitHub environment variable `DB_URL`:
+
+```txt
+jdbc:mariadb://<RDS_ENDPOINT_URL>/jokedb
+```
+
+### Creating an ECS cluster
+
+![ECS Cluster](./images/aws-ecs-cluster-creation.png)
+
+After creation, you should be able to find the cluster in the list.
+
+### Creating an ECS task definition
+
+![ECS Task Definition](./images/aws-ecs-taskdefinition-creation.png)
+
+For the environment variables, put in the details you already know. For the production environment, there is a JSON file for the task definition, located [here](./.github/aws/task-definition-prod.json). The pipeline will overwrite wrongly configured settings. Make sure tough, that the development task definition is correct.
+
+### Creating an ECS service
+
+After creating the task definition, you can create a service for the task.
+
+![ECS Service](./images/aws-ecs-service-creation.png)
+
+As soon as the service is running, you can do the following to make sure that the application is now working correctly.
+
+![ECS Service IP Address](./images/aws-ecs-task-ip-address.png)
+
+For me this was the case.
+
+![ECS Service Running](./images/aws-deployment-working-devt.png)
 
 ## The pipeline
 
@@ -203,7 +259,7 @@ sudo systemctl status actions-runner.service
 
 A GitHub Action Action is a reusable step that can be used in a workflow. There are many actions available in the GitHub Marketplace. In my case I created my own to setup the AWS CLI.
 
-#### `setup-ecr` action
+#### Setup ECR Action
 
 Because the runner is a self-hosted runner, I can install the AWS CLI tool per default. This is also the case with many other [tools on the public runners](https://github.com/actions/runner-images/blob/main/images/ubuntu/Ubuntu2004-Readme.md).
 
@@ -217,7 +273,8 @@ GitHub workflows are defined in a `.github/workflows` folder. Every workflow is 
 
 In my case I created a `cicd-pipeline.yml`, where I added a basic pipeline that runs on the `develop` and `main` branch.
 
-![CI/CD Workflow](./images/cicd-workflow.png)
+> [!IMPORTANT]
+> TODO: Add link to pipeline
 
 ## Public runner pricing
 
