@@ -1,0 +1,63 @@
+{
+  "family": "m324-refcard03-prod",
+  "containerDefinitions": [
+    {
+      "name": "refcard03",
+      "image": "<IMAGE_URI>",
+      "cpu": 1024,
+      "memory": 3072,
+      "memoryReservation": 2048,
+      "portMappings": [
+        {
+          "name": "80",
+          "containerPort": 8080,
+          "hostPort": 8080,
+          "protocol": "tcp",
+          "appProtocol": "http"
+        }
+      ],
+      "essential": true,
+      "environment": [
+        {
+          "name": "DB_USERNAME",
+          "value": "<DB_USERNAME>"
+        },
+        {
+          "name": "DB_URL",
+          "value": "<DB_URL>"
+        },
+        {
+          "name": "DB_PASSWORD",
+          "value": "<DB_PASSWORD>"
+        }
+      ],
+      "environmentFiles": [],
+      "mountPoints": [],
+      "volumesFrom": [],
+      "ulimits": [],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/m324-refcard03-prod",
+          "mode": "non-blocking",
+          "awslogs-create-group": "true",
+          "max-buffer-size": "25m",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        },
+        "secretOptions": []
+      },
+      "systemControls": []
+    }
+  ],
+  "taskRoleArn": "arn:aws:iam::676446025019:role/LabRole",
+  "executionRoleArn": "arn:aws:iam::676446025019:role/LabRole",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "1024",
+  "memory": "3072",
+  "runtimePlatform": {
+    "cpuArchitecture": "X86_64",
+    "operatingSystemFamily": "LINUX"
+  }
+}
