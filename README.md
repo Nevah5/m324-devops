@@ -152,6 +152,34 @@ jobs:
 
 ![Green Pipelines](./images/github-green-pipeline.png)
 
+### Creating a systemd service
+
+To manage the runner more easily and to automatically start it on boot, I created a systemd service in `/etc/systemd/system/actions-runner.service`.
+
+```sh
+[Unit]
+Description=GitHub Actions Runner
+After=network.target
+
+[Service]
+Type=simple
+User=ec2-user
+WorkingDirectory=/home/ec2-user/actions-runner
+ExecStart=/home/ec2-user/actions-runner/run.sh > /home/ec2-user/actions-runner/logs/logs.txt 2> /home/ec2-user/actions-runner/logs/error.txt
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Then I started the service:
+
+```sh
+sudo systemctl start actions-runner.service
+# to check if the service is running
+sudo systemctl status actions-runner.service
+```
+
 ## Deploying the application on AWS
 
 > [!IMPORTANT]
@@ -178,3 +206,5 @@ GitHub workflows are defined in a `.github/workflows` folder. Every workflow is 
 In my case I created a `cicd-pipeline.yml`, where I added a basic pipeline that runs on the `develop` and `main` branch.
 
 ![CI/CD Workflow](./images/cicd-workflow.png)
+
+## Public runner pricing
