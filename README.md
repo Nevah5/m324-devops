@@ -1,5 +1,8 @@
 # M324 DevOps - Architecture Ref Card 03
 
+> [!IMPORTANT]
+> TODO: TOC
+
 ## About this project
 
 The Architecture Ref Card 03 application is from M347. It loads jokes from a database and displays it on an HTML page with Thymeleaf. The application is using the spring boot framework with different layers like controller, service, repository, and model. The application is using the H2 database to store the jokes. The application is using the spring boot framework with different layers like controller, service, repository, and model. The application is using the H2 database to store the jokes.
@@ -27,6 +30,8 @@ You can find the AWS credentials in the learner lab here:
 
 To manage the versioning, we will use the `VERSION` variable. This variable will be used to tag the docker image and the GitHub release. We have to increment this variable every time the production deployment ran successfully.
 
+I also added `DEPLOY_TO_AWS` for the pipeline, so that I can shut down and delete the ECS and RDS on AWS to save costs. If this variable is set to `false`, the pipeline will not push the docker image to the ECR and will not deploy the image to the ECS. But it will still build the image and push to the GitHub Container Registry if it is running on the `main` branch.
+
 ### Environments
 
 Environments allow you to have environment specific variables for a job. You can define the environments in the GitHub repository settings under "Environments".
@@ -37,19 +42,26 @@ Because we are building a docker image, we have to store that somewhere. You gen
 
 ![AWS ECR Variables](./images/aws-ecr-variables.png)
 
-- `AWS_ECR_REGISTRY` (url)
-- `AWS_ECR_REPOSITORY_NAME`
-
 ![GitHub Environment Variables](./images/github-environment-production.png)
 
 It is also a good practice to define a deployment protection. As you can see in the screenshot under "Deployment branches and tags", I restricted the production environment to run on the `main` branch only.
 
-In my case I setup the variables for the prod and devt environment like following:
+In my case I setup the variables for the `production` and `development` environment like following:
 
-| Variable                  | `production`                                 | `development`                                |
-| ------------------------- | -------------------------------------------- | -------------------------------------------- |
-| `AWS_ECR_REGISTRY`        | 676446025019.dkr.ecr.us-east-1.amazonaws.com | 676446025019.dkr.ecr.us-east-1.amazonaws.com |
-| `AWS_ECR_REPOSITORY_NAME` | m324-devops-release                          | m324-devops-snapshot                         |
+| Variable                   | `production`                                                                          | `development`                                |
+| -------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------- |
+| `AWS_ECR_REGISTRY`         | 676446025019.dkr.ecr.us-east-1.amazonaws.com                                          | 676446025019.dkr.ecr.us-east-1.amazonaws.com |
+| `AWS_ECR_REPOSITORY_NAME`  | m324-devops-release                                                                   | m324-devops-snapshot                         |
+| `AWS_ECS_CLUSTER`          | m324-devops-cluster                                                                   | m324-devops-cluster                          |
+| `AWS_ECS_SERVICE`          | m324-refcard-prod                                                                     | m324-refcard-devt                            |
+| `AWS_TASK_DEFINITION_NAME` | m324-refcard03-prod                                                                   | m324-refcard03-devt                          |
+| `DB_URL`                   | jdbc:mariadb://m324-refcard03-db.cpaysuk8s81l.us-east-1.rds.amazonaws.com:3306/jokedb | <-   (the same)                              |
+| `DB_USERNAME`              | jokedbuser                                                                            | jokedbuser                                   |
+
+
+Then also for only the production environment the following `Environment Secret`:
+
+- `DB_PASSWORD`
 
 I haven't set any secrets, because we will define them in AWS for each environment that we deploy to.
 
@@ -183,7 +195,7 @@ sudo systemctl status actions-runner.service
 ## Deploying the application on AWS
 
 > [!IMPORTANT]
-> TODO
+> TODO: Deployment
 
 ## The pipeline
 
@@ -208,3 +220,6 @@ In my case I created a `cicd-pipeline.yml`, where I added a basic pipeline that 
 ![CI/CD Workflow](./images/cicd-workflow.png)
 
 ## Public runner pricing
+
+> [!IMPORTANT]
+> TODO: Pricing
