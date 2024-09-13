@@ -33,7 +33,7 @@ Environments allow you to have environment specific variables for a job. You can
 
 ![GitHub Environments](./images/github-environments.png)
 
-Because we are building a docker image, we want to store that in a repository. We could do that with GitHub (ghcr.io - GitHub Container Registry) or because we are deploying the application within AWS, with ECR (Elastic Container Registry). I created two ECRs. One for the development environment with mutable tags, so tags can be overwritten (snapshot registry). And another one for the production environment, where it is critical to not overwrite older versions to allow a rollback in an emergency (release registry). You can find the needed variables here:
+Because we are building a docker image, we have to store that somewhere. You generally do that in a container registry. For this project, I need to deploy it to ghcr.io (GitHub Container Registry). Because I also want to deploy this application on AWS, I additionally push the image into an ECR (Elastic Container Registry). I created two ECRs. One for the development environment with mutable tags, so tags can be overwritten (snapshot registry). And another one for the production environment, where it is critical to not overwrite older versions to allow a rollback in an emergency (release registry). You can find the needed variables here:
 
 ![AWS ECR Variables](./images/aws-ecr-variables.png)
 
