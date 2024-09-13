@@ -39,7 +39,7 @@ jobs:
         run: |
           docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
           docker push ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:latest
-      - name: 🐙 Push to GHCR
+      - name: 🚢 Push to ghcr.io
         if: ${{ github.ref_name == 'main' }}
         run: |
           echo "🔑 Logging into ghcr.io"
@@ -66,10 +66,10 @@ jobs:
       - name: 🔁 Update task definition
         if: ${{ github.ref_name == 'main' }}
         run: |
-          sed -i 's/<IMAGE_URI>/${{ vars.AWS_ECR_REGISTRY }}\/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ env.VERSION }}/g' ./.github/aws/task-definition.json
-          sed -i 's/<DB_USERNAME>/${{ vars.DB_USERNAME }}/g' ./.github/aws/task-definition.json
-          sed -i 's/<DB_URL>/${{ vars.DB_URL }}/g' ./.github/aws/task-definition.json
-          sed -i 's/<DB_PASSWORD>/${{ secrets.DB_PASSWORD }}/g' ./.github/aws/task-definition.json
+          sed -i 's/<IMAGE_URI>/${{ vars.AWS_ECR_REGISTRY }}\/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}/g' ./.github/aws/task-definition-prod.json
+          sed -i 's/<DB_USERNAME>/${{ vars.DB_USERNAME }}/g' ./.github/aws/task-definition-prod.json
+          sed -i 's|<DB_URL>|${{ vars.DB_URL }}|g' ./.github/aws/task-definition-prod.json
+          sed -i 's/<DB_PASSWORD>/${{ secrets.DB_PASSWORD }}/g' ./.github/aws/task-definition-prod.json
       - name: 🚀 Deploy to ECS
         run: |
           echo "🔒 Setting AWS credentials"
@@ -79,13 +79,13 @@ jobs:
 
           if [ ${{ github.ref_name }} == 'main' ]; then
             echo "📢 Updating task definition"
-            aws ecs register-task-definition --family ${{ vars.AWS_TASK_DEFINITION_NAME }} --cli-input-json file://./github/aws/task-definition.json
+            aws ecs register-task-definition --family ${{ vars.AWS_TASK_DEFINITION_NAME }} --cli-input-json file://./.github/aws/task-definition-prod.json
           fi
 
           echo "🚀 Deploying to ECS"
           aws ecs update-service --cluster ${{ vars.AWS_ECS_CLUSTER }} --service ${{ vars.AWS_ECS_SERVICE }} --force-new-deployment
   create-release:
-    name: Create GitHub Release
+    name: 🐙 Create GitHub Release
     if: ${{ github.ref_name == 'main' }}
     runs-on: self-hosted
     permissions:
