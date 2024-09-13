@@ -9,7 +9,7 @@
       "memoryReservation": 2048,
       "portMappings": [
         {
-          "name": "80",
+          "name": "entrypoint",
           "containerPort": 8080,
           "hostPort": 8080,
           "protocol": "tcp",
