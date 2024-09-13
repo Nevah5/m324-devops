@@ -47,13 +47,14 @@ jobs:
 
           echo "🧩 Preparing image name"
           GITHUB_REPOSITORY=${{ github.repository }}
-          echo "GHCR_REPO=${GITHUB_REPOSITORY@L}" >> "${GITHUB_ENV}"
+          GHCR_REPO=ghcr.io/${GITHUB_REPOSITORY@L}
+          echo "Repository: $GHCR_REPO"
 
           echo "🚀 Pushing to ghcr.io"
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ env.GHCR_REPO }}:latest
-          docker push ${{ env.GHCR_REPO }}:latest
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ env.GHCR_REPO }}:${{ vars.VERSION }}
-          docker push ${{ env.GHCR_REPO }}:${{ vars.VERSION }}
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} $GHCR_REPO:latest
+          docker push $GHCR_REPO:latest
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} $GHCR_REPO:${{ vars.VERSION }}
+          docker push $GHCR_REPO:${{ vars.VERSION }}
   deploy:
     runs-on: self-hosted
     if: false
