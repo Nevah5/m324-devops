@@ -282,6 +282,14 @@ In my case I created a `cicd-pipeline.yml`, where I added a basic pipeline that 
 
 You can checkout the pipeline in [./.github/workflows/cicd-pipeline.yaml](./.github/workflows/cicd-pipeline.yaml).
 
+
+> [!NOTE]
+> This workflow contains an automatic versioning script. It will increment the patch version on the develop branch and the minor version on the main branch.
+
+I've copied the versioning workflow from one of my private projects, but the whole pipeline is self-made.
+
+You can always argue on what is the best way to version your software. In my case I decided to use the [Semantic Versioning](https://semver.org/) scheme.
+
 ## Public runner pricing
 
 [The wiki](https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions) states, that you get 2'000 free minutes of GitHub Actions per month. If you upgrade to Pro, you can use Actions in private repositories as well and get 3'000 minutes.
