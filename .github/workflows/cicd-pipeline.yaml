@@ -175,16 +175,6 @@ jobs:
       contents: write
     needs: [build-and-push, versioning]
     steps:
-      - name: 📦 Checkout repository
-        uses: actions/checkout@v4
-      - name: 🪢 Setup git
-        run: |
-          git config --global user.name "CI/CD Pipeline"
-          git config --global user.email "contact@nevah5.dev"
-      - name: 🏷️ Create tag
-        run: |
-          git tag -a ${{ needs.versioning.outputs.VERSION }} -m "Version ${{ needs.versioning.outputs.VERSION }}"
-          git push --tags
       - uses: ncipollo/release-action@v1
         with:
           tag: ${{ needs.versioning.outputs.VERSION }}
