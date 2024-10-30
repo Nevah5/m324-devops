@@ -169,7 +169,14 @@ sudo dnf install -y lttng-ust openssl-libs krb5-libs zlib libicu
 
 Then the `./config.sh` script worked and I was able to register the runner.
 
-Finally only `./run.sh` left. And to run it in the background: `./run.sh &`.
+Finally only `./run.sh` left. Although this requires you to keep the session open.
+
+To bypass this, you can start the runner as a service.
+
+```sh
+./svc.sh install
+./svc.sh start
+```
 
 ![GitHub Runner](./images/github-runners.png)
 

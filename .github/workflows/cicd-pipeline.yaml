@@ -11,9 +11,83 @@ on:
       - .gitignore
 
 jobs:
+  versioning:
+    runs-on: ubuntu-latest
+    name: 🏷️ Versioning
+    permissions:
+      contents: write
+    outputs:
+      VERSION: ${{ steps.set_version.outputs.VERSION }}
+    steps:
+      - name: 📦 Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+      - name: 🕐 Get current version
+        id: get_version
+        if: github.ref_name == 'main' || github.ref_name == 'develop'
+        run: |
+          develop=$(git describe --tags $(git rev-list --tags --max-count=1)) # gets the latest tag on all branches
+          if [[ ${{ github.ref_name }} == 'main' ]]; then
+            latest=$develop
+          else
+            latest=$(git describe --tags --exact-match --abbrev=0)
+          fi
+
+          echo "LATEST=$latest" >> $GITHUB_OUTPUT
+          echo "DEVELOP=$develop" >> $GITHUB_OUTPUT
+
+          echo Release version: $latest
+          echo Develop version: $develop
+      - name: ⛳ Set new version
+        id: set_version
+        run: |
+          if ! [[ "${{ github.ref_name }}" == "main" ]] && ! [[ "${{ github.ref_name }}" == "develop" ]]; then
+            # this code might not be necessary, but it's here just in case
+            echo "Not on main or develop"
+            hash=$(echo ${{ github.sha }} | cut -c1-7)
+            version=$(echo "${{ github.ref_name }}-$hash" | sed 's/\//-/g')
+            echo "VERSION=$version" >> $GITHUB_OUTPUT
+            echo "Using $version as the version"
+          else
+            latest=${{ steps.get_version.outputs.LATEST }}
+            latest_minor=$(echo $latest | awk -F. '{print $2}')
+            latest_patch=$(echo $latest | awk -F. '{print $3}')
+
+            develop=${{ steps.get_version.outputs.DEVELOP }}
+            develop_major=$(echo $develop | awk -F. '{print $1}' | cut -d'v' -f2)
+            develop_minor=$(echo $develop | awk -F. '{print $2}')
+            develop_patch=$(echo $develop | awk -F. '{print $3}' | cut -d'-' -f1)
+
+            if [[ "${{ github.ref_name }}" == "develop" ]]; then
+              if [[ "${{ vars.MAJOR_VERSION }}" != "$develop_major" ]]; then
+                version=v$((develop_major + 1)).0.0
+              else
+                version=v$develop_major.$develop_minor.$((develop_patch + 1))
+              fi
+            else
+              version=v$develop_major.$((develop_minor + 1)).0
+            fi
+
+            echo "VERSION=$version" >> $GITHUB_OUTPUT
+            echo "Using $version as the version"
+          fi
+      - name: 📦 Checkout develop
+        if: github.ref_name == 'develop'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 📌 Push tag
+        if: github.ref_name == 'main' || github.ref_name == 'develop'
+        run: |
+          git tag ${{ steps.set_version.outputs.VERSION }}
+          git push --tags
   build-and-push:
     name: 🔨 Build and push
     runs-on: self-hosted
+    needs: versioning
     permissions:
       packages: write
     environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
@@ -31,11 +105,11 @@ jobs:
       - name: 🚧 Build docker image
         run: |
           docker build -t ${{ vars.AWS_ECR_REPOSITORY_NAME }} .
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ needs.versioning.outputs.VERSION }}
       - name: 🎯 Push docker image
         if: ${{ vars.DEPLOY_TO_AWS == 'true' }}
         run: |
-          docker push ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}
+          docker push ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ needs.versioning.outputs.VERSION }}
       - name: 🕔 Push latest tag
         if: ${{ github.ref_name == 'develop' && vars.DEPLOY_TO_AWS == 'true' }}
         run: |
@@ -55,8 +129,8 @@ jobs:
           echo "🚀 Pushing to ghcr.io"
           docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} $GHCR_REPO:latest
           docker push $GHCR_REPO:latest
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} $GHCR_REPO:${{ vars.VERSION }}
-          docker push $GHCR_REPO:${{ vars.VERSION }}
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} $GHCR_REPO:${{ needs.versioning.outputs.VERSION }}
+          docker push $GHCR_REPO:${{ needs.versioning.outputs.VERSION }}
   deploy:
     name: 🚀 Deploy to AWS
     runs-on: self-hosted
