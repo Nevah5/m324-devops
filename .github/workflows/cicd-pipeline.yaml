@@ -14,19 +14,19 @@ jobs:
   versioning:
     runs-on:
       labels: self-hosted
-    name: Versioning
+    name: 🏷️ Versioning
     permissions:
       contents: write
     outputs:
       VERSION: ${{ steps.set_version.outputs.VERSION }}
     steps:
-      - name: Checkout code
+      - name: 📦 Checkout code
         uses: actions/checkout@v4
         with:
           ref: main
           fetch-depth: 0
           fetch-tags: true
-      - name: Get current version
+      - name: 🕐 Get current version
         id: get_version
         if: github.ref_name == 'main' || github.ref_name == 'develop'
         run: |
@@ -42,7 +42,7 @@ jobs:
 
           echo Release version: $latest
           echo Develop version: $develop
-      - name: Set new version
+      - name: ⛳ Set new version
         id: set_version
         run: |
           if ! [[ '${{ github.ref_name }}' == 'main' ]] && ! [[ '${{ github.ref_name }}' == 'develop' ]]; then
@@ -76,12 +76,12 @@ jobs:
             echo "VERSION=$version" >> $GITHUB_OUTPUT
             echo "Using $version as the version"
           fi
-      - name: Checkout develop
+      - name: 📦 Checkout develop
         if: github.ref_name == 'develop'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Push tag
+      - name: 📌 Push tag
         if: github.ref_name == 'main' || github.ref_name == 'develop'
         run: |
           git tag ${{ steps.set_version.outputs.VERSION }}
