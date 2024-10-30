@@ -87,6 +87,7 @@ jobs:
   build-and-push:
     name: 🔨 Build and push
     runs-on: self-hosted
+    needs: versioning
     permissions:
       packages: write
     environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
@@ -104,11 +105,11 @@ jobs:
       - name: 🚧 Build docker image
         run: |
           docker build -t ${{ vars.AWS_ECR_REPOSITORY_NAME }} .
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ needs.versioning.outputs.VERSION }}
       - name: 🎯 Push docker image
         if: ${{ vars.DEPLOY_TO_AWS == 'true' }}
         run: |
-          docker push ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}
+          docker push ${{ vars.AWS_ECR_REGISTRY }}/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ needs.versioning.outputs.VERSION }}
       - name: 🕔 Push latest tag
         if: ${{ github.ref_name == 'develop' && vars.DEPLOY_TO_AWS == 'true' }}
         run: |
@@ -128,8 +129,8 @@ jobs:
           echo "🚀 Pushing to ghcr.io"
           docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} $GHCR_REPO:latest
           docker push $GHCR_REPO:latest
-          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} $GHCR_REPO:${{ vars.VERSION }}
-          docker push $GHCR_REPO:${{ vars.VERSION }}
+          docker tag ${{ vars.AWS_ECR_REPOSITORY_NAME }} $GHCR_REPO:${{ needs.versioning.outputs.VERSION }}
+          docker push $GHCR_REPO:${{ needs.versioning.outputs.VERSION }}
   deploy:
     name: 🚀 Deploy to AWS
     runs-on: self-hosted
