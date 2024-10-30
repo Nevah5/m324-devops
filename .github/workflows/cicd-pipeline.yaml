@@ -44,7 +44,7 @@ jobs:
       - name: ⛳ Set new version
         id: set_version
         run: |
-          if ! [[ '${{ github.ref_name }}' == 'main' ]] && ! [[ '${{ github.ref_name }}' == 'develop' ]]; then
+          if ! [[ "${{ github.ref_name }}" == "main" ]] && ! [[ "${{ github.ref_name }}" == "develop" ]]; then
             # this code might not be necessary, but it's here just in case
             echo "Not on main or develop"
             hash=$(echo ${{ github.sha }} | cut -c1-7)
@@ -61,9 +61,8 @@ jobs:
             develop_minor=$(echo $develop | awk -F. '{print $2}')
             develop_patch=$(echo $develop | awk -F. '{print $3}' | cut -d'-' -f1)
 
-
-            if [[ ${{ github.ref_name }} == 'develop' ]]; then
-              if [[ ${{ vars.MAJOR_VERSION }} != $develop_major ]]; then
+            if [[ "${{ github.ref_name }}" == "develop" ]]; then
+              if [[ "${{ vars.MAJOR_VERSION }}" != "$develop_major" ]]; then
                 version=v$((develop_major + 1)).0.0
               else
                 version=v$develop_major.$develop_minor.$((develop_patch + 1))
