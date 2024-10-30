@@ -136,7 +136,9 @@ jobs:
   deploy:
     name: 🚀 Deploy to AWS
     runs-on: self-hosted
-    needs: [build-and-push, versioning]
+    needs:
+      - build-and-push
+      - versioning
     if: ${{ vars.DEPLOY_TO_AWS == 'true' }}
     environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     steps:
@@ -173,7 +175,9 @@ jobs:
     runs-on: self-hosted
     permissions:
       contents: write
-    needs: [build-and-push, versioning]
+    needs:
+      - build-and-push
+      - versioning
     steps:
       - uses: ncipollo/release-action@v1
         with:
