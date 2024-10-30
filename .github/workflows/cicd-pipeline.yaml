@@ -134,7 +134,7 @@ jobs:
   deploy:
     name: 🚀 Deploy to AWS
     runs-on: self-hosted
-    needs: build-and-push
+    needs: [build-and-push, versioning]
     if: ${{ vars.DEPLOY_TO_AWS == 'true' }}
     environment: ${{ github.ref_name == 'main' && 'production' || 'development' }}
     steps:
@@ -144,7 +144,7 @@ jobs:
         if: ${{ github.ref_name == 'main' }}
         run: |
           echo "🔧 Replacing template values in json"
-          sed -i 's/<IMAGE_URI>/${{ vars.AWS_ECR_REGISTRY }}\/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ vars.VERSION }}/g' ./.github/aws/task-definition-prod.json
+          sed -i 's/<IMAGE_URI>/${{ vars.AWS_ECR_REGISTRY }}\/${{ vars.AWS_ECR_REPOSITORY_NAME }}:${{ needs.versioning.outputs.VERSION }}/g' ./.github/aws/task-definition-prod.json
           sed -i 's/<DB_USERNAME>/${{ vars.DB_USERNAME }}/g' ./.github/aws/task-definition-prod.json
           sed -i 's|<DB_URL>|${{ vars.DB_URL }}|g' ./.github/aws/task-definition-prod.json
           sed -i 's/<DB_PASSWORD>/${{ secrets.DB_PASSWORD }}/g' ./.github/aws/task-definition-prod.json
@@ -171,7 +171,7 @@ jobs:
     runs-on: self-hosted
     permissions:
       contents: write
-    needs: build-and-push
+    needs: [build-and-push, versioning]
     steps:
       - name: 📦 Checkout repository
         uses: actions/checkout@v4
@@ -181,10 +181,10 @@ jobs:
           git config --global user.email "contact@nevah5.dev"
       - name: 🏷️ Create tag
         run: |
-          git tag -a ${{ vars.VERSION }} -m "Version ${{ vars.VERSION }}"
+          git tag -a ${{ needs.versioning.outputs.VERSION }} -m "Version ${{ needs.versioning.outputs.VERSION }}"
           git push --tags
       - uses: ncipollo/release-action@v1
         with:
-          tag: ${{ vars.VERSION }}
-          name: Version ${{ vars.VERSION }}
+          tag: ${{ needs.versioning.outputs.VERSION }}
+          name: Version ${{ needs.versioning.outputs.VERSION }}
           generateReleaseNotes: true
