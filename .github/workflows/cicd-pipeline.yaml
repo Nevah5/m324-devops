@@ -12,8 +12,7 @@ on:
 
 jobs:
   versioning:
-    runs-on:
-      labels: self-hosted
+    runs-on: ubuntu-latest
     name: 🏷️ Versioning
     permissions:
       contents: write
