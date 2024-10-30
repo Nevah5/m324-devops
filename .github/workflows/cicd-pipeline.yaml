@@ -64,6 +64,8 @@ jobs:
             if [[ "${{ github.ref_name }}" == "develop" ]]; then
               if [[ "${{ vars.MAJOR_VERSION }}" != "$develop_major" ]]; then
                 version=v$((develop_major + 1)).0.0
+              elif [[ "$latest_minor" != "$develop_minor" ]]; then
+                version=v$develop_major.$latest_minor.1
               else
                 version=v$develop_major.$develop_minor.$((develop_patch + 1))
               fi
